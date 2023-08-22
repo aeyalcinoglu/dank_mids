@@ -43,7 +43,11 @@ def _get_coroutine_fn(w3: Web3, len_inputs: int):
         async with ENVS.BROWNIE_ENCODER_SEMAPHORE[block_identifier]:
             data = await encode_input(self, len_inputs, get_request_data, *args)
             async with ENVS.BROWNIE_CALL_SEMAPHORE[block_identifier]:
-                output = await w3.eth.call({"to": self._address, "data": data}, block_identifier)
+                try:
+                    output = await w3.eth.call({"to": self._address, "data": data}, block_identifier)
+                except:
+                    output = None
+                
         return await decode_output(self, output)
         
     return coroutine
@@ -69,7 +73,7 @@ async def encode_input(call: ContractCall, len_inputs, get_request_data, *args) 
     return data
 
 async def decode_output(call: ContractCall, data: bytes) -> Any:
-    __validate_output(call.abi, data)
+    # __validate_output(call.abi, data)
     try:
         decoded = await decode(call, data)
     # TODO: move this somewhere else
@@ -80,7 +84,8 @@ async def decode_output(call: ContractCall, data: bytes) -> Any:
         decoded = __decode_output(data, call.abi)
     # We have to do it like this so we don't break the process pool.
     if isinstance(decoded, Exception):
-        raise decoded
+        # raise decoded
+        return None
     return decoded
 
 async def __request_data_no_args(call: ContractCall) -> str:

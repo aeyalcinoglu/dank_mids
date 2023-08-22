@@ -153,10 +153,12 @@ def _apply_response_formatters(
         return assoc(
             response, response_type, method_response_formatter(appropriate_response)
         )
-
-    if "result" in response and method in result_formatters:
-        return _format_response("result", result_formatters[method])
-    elif "error" in response and method in error_formatters:
-        return _format_response("error", error_formatters[method])
-    else:
-        return response
+    try:
+        if "result" in response and method in result_formatters:
+            return _format_response("result", result_formatters[method])
+        elif "error" in response and method in error_formatters:
+            return _format_response("error", error_formatters[method])
+        else:
+            return response
+    except:
+        return None
